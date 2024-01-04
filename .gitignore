@@ -22,3 +22,10 @@ pnpm-debug.log*
 *.sln
 *.sw?
 /.env
+
+# Ignore individual files
+Untitled.ipynb
+img.png
+
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
