@@ -1,0 +1,74 @@
+ [Clients (Web/Mobile App, External APIs)]
+                   |
+                   v
+           [Web Server (Gunicorn)]
+                   |
+         -------------------------
+         |                       |
+         v                       v
+ [Load Balancer]         [Flask API Layer]
+         |                  |       |
+         |                  |       |
+         |                  v       v
+         |           [Database Layer] [Background Processing]
+         |                  | (MongoDB/Redis)    (Celery)
+         |                  |       |              |
+         |                  |       |              |
+         |                  |       ----------------
+         |                  |                 |
+         |                  |                 v
+         ----------------------------   [Containerization & Orchestration]
+                                  (Docker & Kubernetes)
+
+
+
+Backend Architecture Diagram Description:
+1. Client Layer:
+
+Description: The user interface or external systems that interact with your application (e.g., web app, mobile app, external APIs).
+Interactions: Sends requests to and receives responses from the Web Server.
+2. Web Server (Gunicorn):
+
+Description: A production-grade web server that handles HTTP requests.
+Interactions:
+Receives requests from clients.
+Forwards requests to the Flask API Layer.
+Sends back the responses to the clients.
+3. Flask API Layer:
+
+Components:
+API Endpoints: Handle different types of requests (e.g., /predict, /getResults).
+Request Handler: Validates and processes incoming data.
+Model Loader: Loads the serialized machine learning model.
+Prediction Engine: Generates predictions using the model.
+Interactions:
+Receives processed requests from the Web Server.
+Interacts with the Database Layer for data retrieval and storage.
+In the case of background tasks, pushes tasks to the Background Processing component.
+Sends back responses to the Web Server.
+4. Database Layer (MongoDB/Redis):
+
+MongoDB:
+Function: Stores persistent data like predictions, user profiles, logs.
+Interactions: Receives read/write requests from the Flask API Layer.
+Redis:
+Function: Manages caching, session data, or temporary data storage.
+Interactions: Stores and retrieves temporary data for the Flask API Layer.
+5. Background Processing (Celery):
+
+Description: Manages time-consuming or scheduled tasks asynchronously.
+Interactions:
+Receives tasks from the Flask API Layer (e.g., model retraining, batch processing).
+Can interact with the Database Layer for data operations.
+Runs tasks independently without affecting the API's performance.
+6. Load Balancer (Optional):
+
+Function: Distributes incoming traffic across multiple server instances.
+Interactions: Sits between the clients and the Web Server to manage traffic and ensure high availability.
+7. Containerization & Orchestration (Docker & Kubernetes):
+
+Docker:
+Function: Packages the application and its environment into containers.
+Kubernetes:
+Function: Manages and orchestrates the containers, handling deployment, scaling, and networking.
+Interactions: Encapsulates components like the Web Server, Flask API, and Background Processing for consistent deployment and scalability.
