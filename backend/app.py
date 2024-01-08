@@ -8,6 +8,8 @@ from pymongo.server_api import ServerApi
 from bson import json_util
 import os
 from dotenv import load_dotenv
+from collections import Counter
+from collections import defaultdict
 
 load_dotenv()  # Load environment variables
 
@@ -70,45 +72,90 @@ def predict():
         return jsonify({'error': str(e)}), 500
 
 
-@app.route('/api/chart/line-scores', methods=['GET'])
+@app.route('/api/ethnic-group-data', methods=['GET'])
+def ethnic_group_data():
+    try:
+        db = client['predictions']['dataset']
+        query_result = db.find({}, {
+            'EthnicGroup_group A': 1, 'EthnicGroup_group B': 1, 'EthnicGroup_group C': 1,
+            'EthnicGroup_group D': 1, 'EthnicGroup_group E': 1, '_id': 0
+        })
+
+        # Initialize counters for each ethnic group
+        ethnic_group_counters = {
+            'EthnicGroup_group A': Counter(),
+            'EthnicGroup_group B': Counter(),
+            'EthnicGroup_group C': Counter(),
+            'EthnicGroup_group D': Counter(),
+            'EthnicGroup_group E': Counter()
+        }
+
+        for doc in query_result:
+            for group in ethnic_group_counters.keys():
+                if doc.get(group, False):
+                    ethnic_group_counters[group].update(doc)
+
+        # Convert Counter objects to dictionaries
+        ethnic_group_data = {group: dict(counter) for group, counter in ethnic_group_counters.items()}
+
+        return jsonify(ethnic_group_data)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+
+@app.route('/api/line-scores', methods=['GET'])
 def line_scores_chart_data():
     try:
         db = client['predictions']['dataset']
         query_result = db.find({}, {'MathScore': 1, 'ReadingScore': 1, 'WritingScore': 1, '_id': 0})
 
-        # Assuming the scores are individual records and you want to plot them as they are
-        math_scores = [doc['MathScore'] for doc in query_result]
-        reading_scores = [doc['ReadingScore'] for doc in query_result]
-        writing_scores = [doc['WritingScore'] for doc in query_result]
+        # Check if query returned any documents
+        query_result_list = list(query_result)
+        if not query_result_list:
+            print("No documents found in the database.")
+            return jsonify({'error': 'No data available'}), 404
+
+        # Extract scores and count occurrences
+        math_score_counts = Counter(doc.get('MathScore', 0) for doc in query_result_list)
+        reading_score_counts = Counter(doc.get('ReadingScore', 0) for doc in query_result_list)
+        writing_score_counts = Counter(doc.get('WritingScore', 0) for doc in query_result_list)
+
+        # Convert Counter objects to dictionaries
+        math_scores_dict = dict(math_score_counts)
+        reading_scores_dict = dict(reading_score_counts)
+        writing_scores_dict = dict(writing_score_counts)
 
         chart_data = {
-            'labels': list(range(len(math_scores))),  # Assuming each record is a distinct data point
+            'labels': ['Math', 'Reading', 'Writing'],
             'datasets': [
                 {
                     'label': 'Math Score',
-                    'data': math_scores,
-                    'borderColor': '#42A5F5',  # Example color, replace with your own
+                    'data': math_scores_dict,
+                    'borderColor': '#42A5F5',
                     'fill': False
-                }, 
+                },
                 {
                     'label': 'Reading Score',
-                    'data': reading_scores,
-                    'borderColor': '#66BB6A',  # Example color, replace with your own
+                    'data': reading_scores_dict,
+                    'borderColor': '#66BB6A',
                     'fill': False
                 },
                 {
                     'label': 'Writing Score',
-                    'data': writing_scores,
-                    'borderColor': '#FFA726',  # Example color, replace with your own
+                    'data': writing_scores_dict,
+                    'borderColor': '#FFA726',
                     'fill': False
                 }
             ]
         }
 
+        print(chart_data)
         return jsonify(chart_data)
     except Exception as e:
+        print(f"An error occurred: {e}")
         return jsonify({'error': str(e)}), 500
-
 
 
 @app.route('/api/get_data', methods=['GET'])
@@ -116,6 +163,7 @@ def get_data():
     try:
         # Connect to the database
         db = client['predictions']['dataset']
+
 
         # Fetch all documents from the collection
         query_result = db.find()
@@ -141,7 +189,48 @@ def get_data():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/api/ethnic-grade-distribution', methods=['GET'])
+def ethnic_grade_distribution():
+    try:
+        db = client['predictions']['dataset']
+        query_result = db.find({}, {
+            'MathScore': 1, 'ReadingScore': 1, 'WritingScore': 1,
+            'EthnicGroup_group A': 1, 'EthnicGroup_group B': 1,
+            'EthnicGroup_group C': 1, 'EthnicGroup_group D': 1,
+            'EthnicGroup_group E': 1, '_id': 0
+        })
 
+        # Initialize data structures
+        grade_distribution = {
+            'EthnicGroup_group A': defaultdict(int),
+            'EthnicGroup_group B': defaultdict(int),
+            'EthnicGroup_group C': defaultdict(int),
+            'EthnicGroup_group D': defaultdict(int),
+            'EthnicGroup_group E': defaultdict(int)
+        }
+
+        # Process each document
+        for doc in query_result:
+            for group in grade_distribution:
+                if doc.get(group, False):
+                    # Ensure the scores are integers
+                    math_score = int(doc.get('MathScore', 0))
+                    reading_score = int(doc.get('ReadingScore', 0))
+                    writing_score = int(doc.get('WritingScore', 0))
+
+                    grade_distribution[group]['MathScore'][math_score] += 1
+                    grade_distribution[group]['ReadingScore'][reading_score] += 1
+                    grade_distribution[group]['WritingScore'][writing_score] += 1
+
+        # Convert defaultdict to regular dict for JSON serialization
+        for group in grade_distribution:
+            for subject in grade_distribution[group]:
+                grade_distribution[group][subject] = dict(grade_distribution[group][subject])
+
+        return jsonify(grade_distribution)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,14 +1,17 @@
 <template>
-  <div>
-    <h1>High School Grade Predictor</h1>
+  <div>                <h1>High School Grade Predictor</h1>
+
     <div class="card">
       <TabMenu :model="items" />
     </div>
     <div v-if="activeTab === 'PredictGrade'">
+
       <PredictGrade />
     </div>
     <div v-if="activeTab === 'DataViz'">
       <DataViz />
+
+
     </div>
   </div>
 </template>
@@ -17,6 +20,7 @@
 import { ref } from "vue";
 import PredictGrade from './components/PredictGrade.vue';
 import DataViz from "@/components/DataViz.vue";
+
 import TabMenu from 'primevue/tabmenu';
 
 const items = ref([

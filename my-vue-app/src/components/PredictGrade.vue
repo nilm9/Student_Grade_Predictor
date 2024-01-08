@@ -1,5 +1,7 @@
 <template>
+
   <div class="container">
+
       <div class="layout-outer">
 
     <form @submit.prevent="submitForm" class="prediction-form">
@@ -40,75 +42,84 @@
 
   </div>
 </div>
-      <div class="binary-layout">
-
-
-<div class="col-bin">
-
-<div class="form-group">
-  <label for="LunchType_standard">Standard Lunch:</label>
-  <InputSwitch id="LunchType_standard" v-model="formData.LunchType_standard" />
-</div>
-<div class="form-group">
-  <label for="TestPrep_completed">Test Preparation Completed:</label>
-  <InputSwitch id="TestPrep_completed" v-model="formData.TestPrep_completed" />
-</div>
-<div class="form-group">
-  <label for="TestPrep_none">No Test Preparation:</label>
-  <InputSwitch id="TestPrep_none" v-model="formData.TestPrep_none" />
-</div>
-<div class="form-group">
-  <label for="ParentMaritalStatus_divorced">Parent Marital Status Divorced:</label>
-  <InputSwitch id="ParentMaritalStatus_divorced" v-model="formData['ParentMaritalStatus_divorced']" />
-</div>
-<div class="form-group">
-  <label for="ParentMaritalStatus_married">Parent Marital Status Married:</label>
-  <InputSwitch id="ParentMaritalStatus_married" v-model="formData['ParentMaritalStatus_married']" />
-</div>
-
-          </div>
+              <div class="form-group binary-layout">
         <div class="col-bin">
+          <div class="label-input-group">
+            <label for="LunchType_standard">Standard Lunch:</label>
+            <InputSwitch id="LunchType_standard" v-model="formData.LunchType_standard" />
+          </div>
 
+          <div class="label-input-group">
+            <label for="TestPrep_completed">Test Preparation Completed:</label>
+            <InputSwitch id="TestPrep_completed" v-model="formData.TestPrep_completed" />
+          </div>
 
-<div class="form-group">
-  <label for="ParentMaritalStatus_single">Parent Marital Status Single:</label>
-  <InputSwitch id="ParentMaritalStatus_single" v-model="formData['ParentMaritalStatus_single']" />
-</div>
-<div class="form-group">
-  <label for="ParentMaritalStatus_widowed">Parent Marital Status Widowed:</label>
-  <InputSwitch id="ParentMaritalStatus_widowed" v-model="formData['ParentMaritalStatus_widowed']" />
-</div>
-<div class="form-group">
-  <label for="TransportMeans_private">Private Transport:</label>
-  <InputSwitch id="TransportMeans_private" v-model="formData.TransportMeans_private" />
-</div>
-<div class="form-group">
-  <label for="TransportMeans_school_bus">School Bus Transport:</label>
-  <InputSwitch id="TransportMeans_school_bus" v-model="formData.TransportMeans_school_bus" />
-</div>
-</div>
+          <div class="label-input-group">
+            <label for="TestPrep_none">No Test Preparation:</label>
+            <InputSwitch id="TestPrep_none" v-model="formData.TestPrep_none" />
+          </div>
+
+          <div class="label-input-group">
+            <label for="ParentMaritalStatus_divorced">Parent Marital Status Divorced:</label>
+            <InputSwitch id="ParentMaritalStatus_divorced" v-model="formData['ParentMaritalStatus_divorced']" />
+          </div>
+
+          <div class="label-input-group">
+            <label for="ParentMaritalStatus_married">Parent Marital Status Married:</label>
+            <InputSwitch id="ParentMaritalStatus_married" v-model="formData['ParentMaritalStatus_married']" />
+          </div>
         </div>
+
+        <div class="col-bin">
+          <div class="label-input-group">
+            <label for="ParentMaritalStatus_single">Parent Marital Status Single:</label>
+            <InputSwitch id="ParentMaritalStatus_single" v-model="formData['ParentMaritalStatus_single']" />
+          </div>
+
+          <div class="label-input-group">
+            <label for="ParentMaritalStatus_widowed">Parent Marital Status Widowed:</label>
+            <InputSwitch id="ParentMaritalStatus_widowed" v-model="formData['ParentMaritalStatus_widowed']" />
+          </div>
+
+          <div class="label-input-group">
+            <label for="TransportMeans_private">Private Transport:</label>
+            <InputSwitch id="TransportMeans_private" v-model="formData.TransportMeans_private" />
+          </div>
+
+          <div class="label-input-group">
+            <label for="TransportMeans_school_bus">School Bus Transport:</label>
+            <InputSwitch id="TransportMeans_school_bus" v-model="formData.TransportMeans_school_bus" />
+          </div>
+        </div>
+      </div>
 
       </div>
 
       <Button type="submit" label="Predict" class="submit-button" @click="startPrediction" />
     </form>
+
+  </div>
+
+  </div>
+
         <form  class="result-form">
-
-
-
-    <div class="prediction-container">
+    <div class="">
       <h2>Your Prediction</h2>
-              <ProgressBar mode="indeterminate" style="height: 6px; margin-top:2rem;" v-if="isLoading"></ProgressBar>
+      <div class="prediction-container">
+        <ProgressBar mode="indeterminate" style="height: 6px; margin-top:2rem;" v-if="isLoading"></ProgressBar>
 
-      <div class="result" v-if="predictionResult">
-        Prediction: {{ predictionResult }}
+        <!-- Display prediction result if available -->
+        <div class="result" v-if="predictionResult">
+          Prediction: {{ predictionResult }}
+        </div>
+
+        <!-- Placeholder when there is no prediction and not loading -->
+        <div class="placeholder" v-if="!predictionResult && !isLoading">
+          <p>Enter your data to get your final grade.</p>
+        </div>
       </div>
     </div>
         </form>
-  </div>
-
-  </div>
 </template>
 
 <script setup>
@@ -215,51 +226,46 @@ const submitForm = async () => {
 const startPrediction = async () => {
   isLoading.value = true;
 
-
-  // Simulate an API call or other async operation
-  try {
-    const response = await fetch('http://127.0.0.1:5000/api/predict', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(formData.value),
-    });
-    const data = await response.json();
-    predictionResult.value = data.prediction;
-  } catch (error) {
-    console.error('Error:', error);
-  } finally {
+  // Delay the API call for 2 seconds
   setTimeout(async () => {
-    await submitForm();
-    isLoading.value = false; // Hide progress bar after 2 seconds
-  }, 2000); // 2000 milliseconds = 2 seconds
- }
+    try {
+      const response = await fetch('http://127.0.0.1:5000/api/predict', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData.value),
+      });
+      const data = await response.json();
+      predictionResult.value = data.prediction;
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      isLoading.value = false; // Hide progress bar after the prediction is fetched
+    }
+  }, 3000); // 2000 milliseconds = 2 seconds
 };
-
 
 </script>
 
 <style>
 .container {
-  max-width: 900px;
-  max-width: 900px;
+
+  max-width: 1000px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 3rem;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
   background-color: #fff;
+  width:70rem;
 }
-.layout-outer{
-  display: grid;
-  grid-template-columns:repeat(2, 1fr);
-}
+
 h1 {
   text-align: center;
   color: #333;
 }
-.result-form{
-
+.prediction-form{
+width: 100%;
 }
 .form-group {
   margin-bottom: 15px;
@@ -273,12 +279,11 @@ h1 {
 }
 
 .submit-button {
-  width: 100%;
-  padding: 10px;
+  padding: 1rem 4rem;
   background-color: #007bff;
   color: #fff;
   border: none;
-  border-radius: 4px;
+  border-radius: .75rem;
   cursor: pointer;
 }
 
@@ -319,4 +324,27 @@ h1 {
   border: 1px solid #ddd;
   text-align: center;
 }
+.label-input-group{
+  display:flex;
+  flex-direction: row;
+  justify-content: space-between;
+  text-align:left;
+  gap:3rem;
+  padding:0rem 3rem;
+}
+.label-input-group label  {
+  width:10rem;
+}
+.result-form{
+  margin:3rem;
+}
+.prediction-container{
+    max-width: 1000px;
+  margin: 2rem auto;
+  padding: 3rem;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  background-color: #fff;
+}
+
 </style>

@@ -1,7 +1,8 @@
 <template>
-    <div class="card">
+
         <Chart type="bar" :data="chartData" :options="chartOptions" class="chart"/>
-    </div>
+
+
 </template>
 
 <script setup>
@@ -89,9 +90,6 @@ const setChartOptions = () => {
 
 <style>
 
-.chart {
-  height:60vh;
-  width:40vw;
-}
+
 </style>
 
