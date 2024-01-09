@@ -1,33 +1,60 @@
 <template>
     <div class="card">
-              <h2 class="title">Subject Grades</h2>
+        <h2 class="title">Subject Grades</h2>
+        <div class="card-shadow">
+            <!-- Show spinner when loading the SubjectsChart data -->
+            <div v-if="isLoadingSubjectsChart" class="flex justify-content-center">
+                <ProgressSpinner />
+            </div>
+            <!-- Show SubjectsChart once the data is loaded -->
+            <div v-else>
+                <SubjectsChart />
+            </div>
+        </div>
 
-      <div class="card-shadow">
-
-          <SubjectsChart />
-      </div>
-                    <h2 class="title" >Ethnic distribution</h2>
-
-      <div class="card-shadow">
-          <EthnicChart />
-      </div>
+        <h2 class="title">Ethnic distribution</h2>
+        <div class="card-shadow">
+            <div v-if="isLoadingEthnicChart" class="flex justify-content-center">
+                <ProgressSpinner />
+            </div>
+            <div v-else>
+                <EthnicChart />
+            </div>
+        </div>
     </div>
-
 </template>
 
 <script setup>
 import { ref, onMounted } from "vue";
 import SubjectsChart from "@/components/charts/SubjectsChart.vue";
 import EthnicChart from "@/components/charts/EthnicChart.vue";
+import ProgressSpinner from 'primevue/progressspinner';
+
+const isLoadingSubjectsChart = ref(true);
+const isLoadingEthnicChart = ref(true);
+
 onMounted(async () => {
+    const startTime = Date.now();
+
+    // Fetch data for both charts
     const apiData = await fetchChartData();
-    console.log(apiData)
+    console.log(apiData);
     chartData.value = setChartData(apiData);
     chartOptions.value = setChartOptions();
+
+    const elapsedTime = Date.now() - startTime;
+    const delay = Math.max(4000 - elapsedTime +1000, 0); // Ensure at least 3 seconds
+
+    // Set loading state to false after the delay
+    setTimeout(() => {
+        isLoadingSubjectsChart.value = false;
+        isLoadingEthnicChart.value = false;
+    }, delay);
 });
 
 const chartData = ref();
 const chartOptions = ref();
+
 
 // Function to fetch chart data from the API
 const fetchChartData = async () => {
