@@ -1,24 +1,26 @@
 <template>
-        <Chart type="bar" :data="chartData" :options="chartOptions" class="chart"/>
+    <div class="card">
+        <Chart type="line" :data="chartData" :options="chartOptions" class="h-30rem" />
+    </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from "vue";
-import Chart from 'primevue/chart'; // Replace with your actual Chart component import
+import Chart from 'primevue/chart';
 
 const chartData = ref();
 const chartOptions = ref();
-
 onMounted(async () => {
-    const apiData = await fetchEthnicGroupData();
-    chartData.value = setChartData(apiData);
-    chartOptions.value = setChartOptions();
+    const apiData = await fetchMultiAxisChartData();
+    if (apiData) {
+        chartData.value = setChartData(apiData);
+        chartOptions.value = setChartOptions();
+    }
 });
 
-// Function to fetch chart data from the API
-const fetchEthnicGroupData = async () => {
+const fetchMultiAxisChartData = async () => {
     try {
-        const response = await fetch('http://127.0.0.1:5000/api/ethnic-group-data'); // Adjust the URL as needed
+        const response = await fetch('http://127.0.0.1:5000/api/multi-axis-chart-data');
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
@@ -28,21 +30,20 @@ const fetchEthnicGroupData = async () => {
     }
 };
 
-// Function to set chart data
 const setChartData = (apiData) => {
-    // Extracting the labels (ethnic groups) and their counts
-    const labels = Object.keys(apiData);
-    const datasets = [{
-        label: 'Ethnic Group Count',
-        data: labels.map(label => apiData[label][label]), // Assuming the count is stored as value of the same key
-        backgroundColor: ['rgba(255, 99, 132, 0.2)', 'rgba(32,150,243,.2)', 'rgba(255, 206, 86, 0.2)', 'rgba(75, 192, 192, 0.2)', 'rgba(153, 102, 255, 0.2)'],
-        borderColor: ['rgba(255, 99, 132, 1)', 'rgba(32,150,243,255)', 'rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)'],
-        borderWidth: 1
-    }];
+    const documentStyle = getComputedStyle(document.documentElement);
 
     return {
-        labels,
-        datasets
+        labels: apiData.labels,
+        datasets: [
+            {
+                ...apiData.datasets[0],
+                borderColor: documentStyle.getPropertyValue('--blue-500'),
+                pointBackgroundColor: documentStyle.getPropertyValue('--blue-500'),
+                tension: 0.4
+            },
+            // Add other dataset(s) for additional axes here if needed
+        ]
     };
 };
 
@@ -53,6 +54,9 @@ const setChartOptions = () => {
     const surfaceBorder = documentStyle.getPropertyValue('--surface-border');
 
     return {
+        stacked: false,
+        maintainAspectRatio: false,
+        aspectRatio: 0.6,
         plugins: {
             legend: {
                 labels: {
@@ -70,23 +74,29 @@ const setChartOptions = () => {
                 }
             },
             y: {
-                beginAtZero: true,
+                type: 'linear',
+                display: true,
+                position: 'left',
                 ticks: {
                     color: textColorSecondary
                 },
                 grid: {
                     color: surfaceBorder
                 }
-            }
+            },
+            // Add configuration for the second y-axis (y1) if you have a second dataset
+            // y1: { ... }
         }
     };
 }
 </script>
 
-
-
 <style>
-
-
+/* Add your component-specific styles here */
+.card {
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    margin: 20px;
+}
 </style>
-

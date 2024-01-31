@@ -1,5 +1,6 @@
 <template>
-    <div class="card">
+    <div class="">
+
         <h2 class="title">Subject Grades</h2>
         <div class="card-shadow">
             <!-- Show spinner when loading the SubjectsChart data -->
@@ -8,27 +9,83 @@
             </div>
             <!-- Show SubjectsChart once the data is loaded -->
             <div v-else>
-                <SubjectsChart />
+                <SubjectsChart style="height:40vh" />
             </div>
         </div>
 
-        <h2 class="title">Ethnic distribution</h2>
+        <h2 class="title">Study Hours</h2>
         <div class="card-shadow">
             <div v-if="isLoadingEthnicChart" class="flex justify-content-center">
                 <ProgressSpinner />
             </div>
             <div v-else>
-                <EthnicChart />
+                <StudyHours />
             </div>
         </div>
+
+              <h2 class="title">Parent Education</h2>
+        <div class="card-shadow">
+            <div v-if="isLoadingEthnicChart" class="flex justify-content-center">
+                <ProgressSpinner />
+            </div>
+            <div v-else>
+                <ParentEducation />
+            </div>
+        </div>
+
+      <h2 class="title">Bar charts</h2>
+        <div class="card-shadow">
+            <div v-if="isLoadingEthnicChart" class="flex justify-content-center">
+                <ProgressSpinner />
+            </div>
+            <div v-else>
+                <DynamicBar />
+            </div>
+        </div>
+
+
+       <h2 class="title">Test Pie</h2>
+        <div class="card-shadow">
+            <div v-if="isLoadingEthnicChart" class="flex justify-content-center">
+                <ProgressSpinner />
+            </div>
+            <div v-else>
+                <TestPie />
+            </div>
+        </div>
+
+
+      <h2 class="title">Score Overview</h2>
+        <div class="card-shadow">
+            <div v-if="isLoadingEthnicChart" class="flex justify-content-center">
+                <ProgressSpinner />
+            </div>
+            <div v-else>
+                <RadarChart />
+            </div>
+        </div>
+
+
     </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from "vue";
 import SubjectsChart from "@/components/charts/SubjectsChart.vue";
-import EthnicChart from "@/components/charts/EthnicChart.vue";
+//import EthnicChart from "@/components/charts/EthnicChart.vue";
+
+//import GradePie from "@/components/charts/GradePie.vue";
+
+import TestPie from "@/components/charts/TestPie.vue";
+import RadarChart from "@/components/charts/RadarChart.vue";
+
+
 import ProgressSpinner from 'primevue/progressspinner';
+import DynamicBar from "@/components/charts/DynamicBar.vue";
+import StudyHours from "@/components/charts/StudyHours.vue";
+import ParentEducation from "@/components/charts/ParentEducation.vue";
+//import StudyGrades from "@/components/charts/StudyGrades.vue";
+//import MultiAxis from "@/components/charts/MultiAxis.vue";
 
 const isLoadingSubjectsChart = ref(true);
 const isLoadingEthnicChart = ref(true);
@@ -43,7 +100,7 @@ onMounted(async () => {
     chartOptions.value = setChartOptions();
 
     const elapsedTime = Date.now() - startTime;
-    const delay = Math.max(4000 - elapsedTime +1000, 0); // Ensure at least 3 seconds
+    const delay = Math.max(1000 - elapsedTime +10, 0); // Ensure at least 3 seconds
 
     // Set loading state to false after the delay
     setTimeout(() => {

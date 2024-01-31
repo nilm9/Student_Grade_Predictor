@@ -6,7 +6,7 @@ import os
 load_dotenv()  # Load environment variables
 
 # Read CSV
-df = pd.read_csv('../modelling/modified_dataset.csv')
+df = pd.read_csv('../modelling/modified_dataset2.csv')
 
 # MongoDB Connection
 uri = os.environ.get('MONGO_CLIENT_URI')  # Set the MONGO_CLIENT_URI environment variable

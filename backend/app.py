@@ -1,7 +1,6 @@
 import pandas as pd
 from flask import Flask, request, jsonify
 from flask_pymongo import PyMongo
-import joblib
 from flask_cors import CORS
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
@@ -10,9 +9,18 @@ import os
 from dotenv import load_dotenv
 from collections import Counter
 from collections import defaultdict
+from scipy.optimize import linprog
+import joblib
+import numpy as np
+from flask import Flask, jsonify
+from traceback import format_exc
+import warnings
+from sklearn.exceptions import DataConversionWarning
+
+warnings.filterwarnings(action='ignore', category=DataConversionWarning)
+
 
 load_dotenv()  # Load environment variables
-
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
@@ -37,20 +45,29 @@ except Exception as e:
 # Load the trained model
 model = joblib.load('final_model.joblib')
 
+
+BASE_COLORS = {
+    'blue': '#42A5F5',
+    'green': '#66BB6A',
+    'orange': '#FFA726',
+    # Add more base colors as needed
+}
+
+
 @app.route('/api/predict', methods=['POST'])
 def predict():
     try:
         data = request.json
 
-
         required_features = [
-            'NrSiblings', 'ReadingScore', 'WritingScore',
-            'Gender_male', 'EthnicGroup_group A', 'EthnicGroup_group B',
-            'EthnicGroup_group C', 'EthnicGroup_group D', 'EthnicGroup_group E',
-            'LunchType_standard', 'TestPrep_completed', 'TestPrep_none',
-            'ParentMaritalStatus_divorced', 'ParentMaritalStatus_married',
-            'ParentMaritalStatus_single', 'ParentMaritalStatus_widowed',
-            'TransportMeans_private', 'TransportMeans_school_bus', 'LinguisticScore'
+            'ParentEduc', 'PracticeSport', 'IsFirstChild', 'NrSiblings',
+            'WklyStudyHours', 'Gender_male', 'EthnicGroup_group A',
+            'EthnicGroup_group B', 'EthnicGroup_group C', 'EthnicGroup_group D',
+            'EthnicGroup_group E', 'LunchType_standard', 'TestPrep_completed',
+            'TestPrep_none', 'ParentMaritalStatus_divorced',
+            'ParentMaritalStatus_married', 'ParentMaritalStatus_single',
+            'ParentMaritalStatus_widowed', 'TransportMeans_private',
+            'TransportMeans_school_bus'
         ]
 
         # Check if all required features are present
@@ -133,19 +150,19 @@ def line_scores_chart_data():
                 {
                     'label': 'Math Score',
                     'data': math_scores_dict,
-                    'borderColor': '#42A5F5',
+                    'borderColor': BASE_COLORS['blue'],
                     'fill': False
                 },
                 {
                     'label': 'Reading Score',
                     'data': reading_scores_dict,
-                    'borderColor': '#66BB6A',
+                    'borderColor': BASE_COLORS['green'],
                     'fill': False
                 },
                 {
                     'label': 'Writing Score',
                     'data': writing_scores_dict,
-                    'borderColor': '#FFA726',
+                    'borderColor': BASE_COLORS['orange'],
                     'fill': False
                 }
             ]
@@ -187,6 +204,268 @@ def get_data():
         return jsonify({'data': data_json})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+
+@app.route('/api/grade-distribution', methods=['GET'])
+def grade_distribution():
+    try:
+        grade_counts = defaultdict(int)
+
+        collection = client['predictions']['dataset']
+
+        # Fetch grades from the collection and count each grade occurrence
+        for student in collection.find({}, {'grade': 1, '_id': 0}):
+            grade_counts[student['grade']] += 1
+
+        # Calculate total number of grades to determine percentages
+        total_grades = sum(grade_counts.values())
+
+        # Calculate percentage for each grade
+        grade_percentages = {grade: (count / total_grades) * 100 for grade, count in grade_counts.items()}
+
+        return jsonify(grade_percentages)
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/radar-chart-data', methods=['GET'])
+def radar_chart_data():
+    try:
+        db = client['predictions']['dataset']
+
+        # Aggregation pipeline to compute averages for more features
+        pipeline = [
+            {
+                "$group": {
+                    "_id": None,
+                    "avgPracticeSport": {"$avg": "$PracticeSport"},
+                    "avgWklyStudyHours": {"$avg": "$WklyStudyHours"},
+                    "avgOverallScore": {"$avg": "$Overall_Score"},
+                    "avgMathScore": {"$avg": "$MathScore"},
+                    "avgReadingScore": {"$avg": "$ReadingScore"},
+                    "avgParentEduc": {"$avg": "$ParentEduc"}
+                }
+            }
+        ]
+
+        result = db.aggregate(pipeline)
+        data = next(result, None)
+
+        if data:
+            # Scale scores from 0-100 to 0-10
+            data['avgMathScore'] /= 10
+            data['avgReadingScore'] /= 10
+            data['avgOverallScore'] /= 10
+
+            # Remove the '_id' field
+            data.pop('_id', None)
+
+            # Convert the averages to a suitable format for the radar chart
+            radar_data = {
+                'labels': ['Practice Sport', 'Weekly Study Hours', 'Overall Score', 'Math Score', 'Reading Score', 'Parent Education'],
+                'datasets': [
+                    {
+                        'label': 'Average',
+                        'data': [data['avgPracticeSport'], data['avgWklyStudyHours'], data['avgOverallScore'],
+                                 data['avgMathScore'], data['avgReadingScore'], data['avgParentEduc']],
+                        'fill': True,
+                        'backgroundColor': 'rgba(255, 99, 132, 0.2)',
+                        'borderColor': 'rgb(255, 99, 132)',
+                        'pointBackgroundColor': 'rgb(255, 99, 132)',
+                        'pointBorderColor': '#fff',
+                        'pointHoverBackgroundColor': '#fff',
+                        'pointHoverBorderColor': 'rgb(255, 99, 132)'
+                    }
+                ]
+            }
+            return jsonify(radar_data)
+
+        else:
+            return jsonify({'error': 'No data available'}), 404
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# An example function to process data for a given feature
+def process_data(df, feature):
+    # Process the data based on the feature
+    # This is a placeholder logic; implement according to your dataset
+    if feature in df.columns:
+        processed_data = df[feature].value_counts().to_dict()
+    else:
+        # Handle grouped features (like 'Ethnic Groups')
+        grouped_features = {
+            'Ethnic Groups': ['EthnicGroup_group A', 'EthnicGroup_group B', 'EthnicGroup_group C',
+                              'EthnicGroup_group D', 'EthnicGroup_group E'],
+            'Test Preparation': ['TestPrep_completed', 'TestPrep_none'],
+            'Parent Marital Status': ['ParentMaritalStatus_divorced', 'ParentMaritalStatus_married',
+                                      'ParentMaritalStatus_single', 'ParentMaritalStatus_widowed'],
+            'Transport Means': ['TransportMeans_private', 'TransportMeans_school_bus']
+        }
+
+        if feature in grouped_features:
+            processed_data = df[grouped_features[feature]].apply(pd.Series.value_counts).fillna(0).sum(axis=1).to_dict()
+        else:
+            processed_data = {}
+
+    return processed_data
+
+@app.route('/api/data_feature', methods=['GET'])
+def get_data_feature():
+    feature = request.args.get('feature')
+
+    # Fetching data from the database
+    data = list(client['predictions']['dataset'].find())
+
+    # Converting to a pandas DataFrame
+    df = pd.DataFrame(data)
+
+    # Now df is a DataFrame and should have the 'columns' attribute
+    processed_data = process_data(df, feature)
+    return jsonify(processed_data)
+
+
+@app.route('/api/prep-data', methods=['GET'])
+def prep_data():
+    try:
+        collection = client['predictions']['dataset']
+
+        # Count the number of students who completed test preparation
+        test_prep_completed_count = collection.count_documents({'TestPrep_completed': True})
+
+        # Count the number of students who did not complete test preparation
+        test_prep_none_count = collection.count_documents({'TestPrep_none': True})
+
+        data = {
+            'TestPrepCompleted': test_prep_completed_count,
+            'TestPrepNotCompleted': test_prep_none_count
+        }
+
+        return jsonify(data)
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/multi-axis-chart-data', methods=['GET'])
+def multi_axis_chart_data():
+    try:
+        db = client['predictions']['dataset']
+
+        # Aggregation pipeline to group by ParentEduc and compute average Overall_Score
+        pipeline = [
+            {
+                "$group": {
+                    "_id": "$ParentEduc",
+                    "avgOverallScore": {"$avg": "$Overall_Score"}
+                }
+            },
+            {"$sort": {"_id": 1}}  # Sorting by ParentEduc
+        ]
+
+        result = db.aggregate(pipeline)
+        parent_educ_scores = list(result)
+
+        # Preparing data for the multi-axis chart
+        labels = [doc['_id'] for doc in parent_educ_scores]
+        overall_scores = [doc['avgOverallScore'] for doc in parent_educ_scores]
+
+        multi_axis_data = {
+            'labels': labels,
+            'datasets': [
+                {
+                    'label': 'Overall Score',
+                    'data': overall_scores,
+                    'yAxisID': 'y-axis-1',
+                    'type': 'line',  # Line chart for Overall Scores
+                    'fill': False,
+                    'borderColor': BASE_COLORS['blue'],
+                    'pointBackgroundColor': BASE_COLORS['green'],                    'backgroundColor': 'rgba(54, 162, 235, 0.5)',
+                    'pointBorderColor': BASE_COLORS['orange'],
+                    'pointBorderWidth': 2,
+                    'pointHoverRadius': 5,
+                    'pointHoverBackgroundColor': BASE_COLORS['orange'],
+                    'pointHoverBorderColor':  BASE_COLORS['green'] ,
+                    'pointHoverBorderWidth': 2,
+                    'pointRadius': 3,
+                    'pointHitRadius': 10
+                }
+                # Add other dataset(s) if needed for additional axes
+            ]
+        }
+
+        return jsonify(multi_axis_data)
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/stacked-scores-by-ethnicity', methods=['GET'])
+def stacked_scores_by_ethnicity():
+    try:
+        db = client['predictions']['dataset']
+        pipeline = [
+            {
+                "$group": {
+                    "_id": "$EthnicGroup",
+                    "MathScores": {"$avg": "$MathScore"},
+                    "ReadingScores": {"$avg": "$ReadingScore"},
+                    "WritingScores": {"$avg": "$WritingScore"}
+                }
+            },
+            {"$sort": {"_id": 1}}  # Optional: sort by ethnic group
+        ]
+
+        query_result = db.aggregate(pipeline)
+
+        ethnic_groups = []
+        math_scores = []
+        reading_scores = []
+        writing_scores = []
+
+        for doc in query_result:
+            ethnic_groups.append(doc['_id'])
+            math_scores.append(doc['MathScores'])
+            reading_scores.append(doc['ReadingScores'])
+            writing_scores.append(doc['WritingScores'])
+
+        chart_data = {
+            'labels': ethnic_groups,
+            'datasets': [
+                {
+                    'label': 'Math Score',
+                    'data': math_scores,
+                    'backgroundColor': BASE_COLORS['blue']
+                },
+                {
+                    'label': 'Reading Score',
+                    'data': reading_scores,
+                    'backgroundColor': BASE_COLORS['green']
+                },
+                {
+                    'label': 'Writing Score',
+                    'data': writing_scores,
+                    'backgroundColor': BASE_COLORS['orange']
+                }
+            ]
+        }
+
+        return jsonify(chart_data)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+def normalize_data(data):
+    min_val = min(data.values())
+    max_val = max(data.values())
+    return {k: (v - min_val) / (max_val - min_val) if max_val - min_val else 0 for k, v in data.items()}
+
+
+
 
 
 @app.route('/api/ethnic-grade-distribution', methods=['GET'])
@@ -231,6 +510,154 @@ def ethnic_grade_distribution():
     except Exception as e:
         print(f"An error occurred: {e}")
         return jsonify({'error': str(e)}), 500
+
+
+
+
+def get_feature_importance_data():
+    try:
+        # Load the trained Gradient Boosting model
+        model = joblib.load('final_model.joblib')
+
+        # Extract feature importances
+        importances = model.feature_importances_
+
+        required_features = [
+            "ParentEduc", "PracticeSport", "IsFirstChild", "NrSiblings", "WklyStudyHours",
+            "MathScore", "ReadingScore", "WritingScore",
+            "Gender_male", "EthnicGroup_group A", "EthnicGroup_group B", "EthnicGroup_group C",
+            "EthnicGroup_group D", "EthnicGroup_group E", "LunchType_standard", "TestPrep_completed",
+            "TestPrep_none", "ParentMaritalStatus_divorced", "ParentMaritalStatus_married",
+            "ParentMaritalStatus_single", "ParentMaritalStatus_widowed", "TransportMeans_private",
+            "TransportMeans_school_bus"
+        ]
+
+        # Map feature names to their importances and sort by importance
+        importance_dict = dict(zip(required_features, importances))
+        sorted_importances = sorted(importance_dict.items(), key=lambda x: x[1], reverse=True)
+
+        return sorted_importances
+
+    except Exception as e:
+        print(f"Error in getting feature importance data: {e}")
+        return None
+
+
+@app.route('/api/feature-importance', methods=['GET'])
+def feature_importance():
+    feature_importance_data = get_feature_importance_data()
+    if feature_importance_data:
+        return jsonify({'feature_importance': feature_importance_data})
+    else:
+        return jsonify({'error': 'Unable to retrieve feature importance data'}), 500
+
+
+def counterfactual_analysis(model, current_features, desired_prediction, max_increase_hours, required_features):
+    weekly_study_hours_index = required_features.index("WklyStudyHours")
+    original_hours = current_features[weekly_study_hours_index]
+    max_hours = original_hours + max_increase_hours
+
+    # Convert current_features list to DataFrame
+    current_features_df = pd.DataFrame([current_features], columns=required_features)
+
+    while current_features[weekly_study_hours_index] < max_hours:
+        # Use the DataFrame for prediction
+        current_pred = model.predict(current_features_df)[0]
+        if current_pred >= desired_prediction:
+            break
+
+        current_features[weekly_study_hours_index] += 1  # Increment weekly study hours
+        # Update the DataFrame with the new value
+        current_features_df.at[0, "WklyStudyHours"] = current_features[weekly_study_hours_index]
+
+    return current_features
+
+
+@app.route('/api/counterfactual-analysis', methods=['POST'])
+def perform_counterfactual_analysis():
+    try:
+        print("debugging...")
+        content = request.json
+        current_features_dict = content['current_features']
+        desired_prediction = float(content['desired_prediction'])
+        max_increase_hours = content.get('max_increase_hours', 10)  # Default to 10 hours if not specified
+
+        required_features = [
+            "ParentEduc", "PracticeSport", "IsFirstChild", "NrSiblings", "WklyStudyHours",
+            "Gender_male", "EthnicGroup_group A", "EthnicGroup_group B", "EthnicGroup_group C",
+            "EthnicGroup_group D", "EthnicGroup_group E", "LunchType_standard", "TestPrep_completed",
+            "TestPrep_none", "ParentMaritalStatus_divorced", "ParentMaritalStatus_married",
+            "ParentMaritalStatus_single", "ParentMaritalStatus_widowed", "TransportMeans_private",
+            "TransportMeans_school_bus"
+        ]
+        current_features = [float(current_features_dict[feature]) for feature in required_features]
+
+        counterfactual = counterfactual_analysis(model, current_features, desired_prediction, max_increase_hours,
+                                                 required_features)
+
+        return jsonify({'counterfactual': counterfactual})
+
+    except Exception as e:
+        print(f"Error: {e}")
+        print(format_exc())  # This will print the stack trace
+        return jsonify({'error': str(e)}), 500
+
+
+
+
+@app.route('/api/study-hours-distribution', methods=['GET'])
+def study_hours_distribution():
+    try:
+        collection = client['predictions']['dataset']
+
+        # Aggregating counts of weekly study hours
+        pipeline = [
+            {"$group": {"_id": "$WklyStudyHours", "count": {"$sum": 1}}},
+            {"$sort": {"_id": 1}}  # Sorting by weekly study hours
+        ]
+
+        query_result = collection.aggregate(pipeline)
+
+        # Preparing data for the bar chart
+        study_hours_data = defaultdict(int)
+        for record in query_result:
+            study_hours = record['_id']
+            count = record['count']
+            study_hours_data[study_hours] = count
+
+        return jsonify(study_hours_data)
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+
+
+
+
+@app.route('/api/parent-education-distribution', methods=['GET'])
+def parent_education_distribution():
+    try:
+        collection = client['predictions']['dataset']
+
+        # Aggregating the count of each ParentEduc value
+        pipeline = [
+            {"$group": {"_id": "$ParentEduc", "count": {"$sum": 1}}},
+            {"$sort": {"_id": 1}}  # Sorting by ParentEduc value
+        ]
+        result = collection.aggregate(pipeline)
+
+        # Preparing the data for the response
+        distribution = {str(doc['_id']): doc['count'] for doc in result}
+
+        return jsonify(distribution)
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)

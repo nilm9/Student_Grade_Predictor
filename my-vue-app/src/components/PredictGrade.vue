@@ -1,4 +1,5 @@
 <template>
+        <h2 class="title">Input your data to get your results</h2>
 
   <div class="container">
 
@@ -6,9 +7,7 @@
 
     <form @submit.prevent="submitForm" class="prediction-form">
       <div class="stacked">
-              <div >
-
-
+      <div >
       <div class="form-group">
         <label for="NrSiblings">Number of Siblings:</label>
         <InputText id="NrSiblings" v-model="formData.NrSiblings" />
@@ -22,24 +21,38 @@
         <InputText id="WritingScore" v-model="formData.WritingScore" />
       </div>
       <div class="form-group">
-        <label for="LinguisticScore">Linguistic Score:</label>
-        <InputText id="LinguisticScore" v-model="formData.LinguisticScore" />
+        <label for="MathScore">Math Score:</label>
+        <InputText id="MathScore" v-model="formData.LinguisticScore" />
       </div>
+
+        <div class="form-group">
+  <label for="ParentEduc">Parent Education Level:</label>
+  <InputText id="ParentEduc" v-model="formData.ParentEduc" />
+</div>
+
+
+
 <div class="form-group">
+  <label for="WklyStudyHours">Weekly Study Hours:</label>
+  <InputText id="WklyStudyHours" v-model="formData.WklyStudyHours" />
+</div>
+
+        <div class="form-group">
   <label for="gender">Gender:</label>
   <SelectButton id="gender" v-model="selectedGender" :options="genderOptions" optionLabel="name" />
 </div>
 
-                <div class="form-group">
-  <label>Ethnic Group:</label>
-                  <div class=" centered">
-    <div v-for="option in ethnicGroupOptions" :key="option.value" class="form-group centered">
 
-      <RadioButton v-model="selectedEthnicGroup" :inputId="option.value" name="ethnicGroup" :value="option.value" />
-      <label :for="option.value">{{ option.name }}</label>
-    </div>
-                        </div>
 
+  <div class="form-group">
+    <label>Ethnic Group:</label>
+    <div class=" centered">
+      <div v-for="option in ethnicGroupOptions" :key="option.value" class="form-group centered">
+
+        <RadioButton v-model="selectedEthnicGroup" :inputId="option.value" name="ethnicGroup" :value="option.value" />
+        <label :for="option.value">{{ option.name }}</label>
+      </div>
+     </div>
   </div>
 </div>
               <div class="form-group binary-layout">
@@ -68,6 +81,12 @@
             <label for="ParentMaritalStatus_married">Parent Marital Status Married:</label>
             <InputSwitch id="ParentMaritalStatus_married" v-model="formData['ParentMaritalStatus_married']" />
           </div>
+
+                  <div class="label-input-group">
+  <label for="PracticeSport">Practice Sport:</label>
+  <InputSwitch id="PracticeSport" v-model="formData.PracticeSport" />
+</div>
+
         </div>
 
         <div class="col-bin">
@@ -90,6 +109,14 @@
             <label for="TransportMeans_school_bus">School Bus Transport:</label>
             <InputSwitch id="TransportMeans_school_bus" v-model="formData.TransportMeans_school_bus" />
           </div>
+
+          <div class="label-input-group">
+  <label for="IsFirstChild">Is First Child:</label>
+  <InputSwitch id="IsFirstChild" v-model="formData.IsFirstChild" />
+</div>
+
+
+
         </div>
       </div>
 
@@ -104,7 +131,7 @@
 
         <form  class="result-form">
     <div class="">
-      <h2>Your Prediction</h2>
+      <h2>Your Results</h2>
       <div class="prediction-container">
         <ProgressBar mode="indeterminate" style="height: 6px; margin-top:2rem;" v-if="isLoading"></ProgressBar>
 
@@ -116,6 +143,15 @@
         <!-- Placeholder when there is no prediction and not loading -->
         <div class="placeholder" v-if="!predictionResult && !isLoading">
           <p>Enter your data to get your final grade.</p>
+        </div>
+   <div class="result-container">
+
+        <div class="image-container">
+          <FeatureImportance style=" width:45vw;"/>
+        </div>
+        <form class="result-form">
+          <CounterFactual  />
+        </form>
         </div>
       </div>
     </div>
@@ -132,6 +168,10 @@ import Button from 'primevue/button';
 import SelectButton from 'primevue/selectbutton';
 import RadioButton from 'primevue/radiobutton';
 import ProgressBar from 'primevue/progressbar';
+import FeatureImportance from "@/components/FeatureImportance.vue";
+import CounterFactual from "@/components/CounterFactual.vue";
+
+
 
 const predictionResult = ref(null);
 //const progressValue = ref(0);
@@ -155,26 +195,62 @@ const ethnicGroupOptions = [
 
 
 const formData = ref({
-  NrSiblings: '',
-  ReadingScore: '',
-  WritingScore: '',
-  LinguisticScore: '',
-  Gender_male: false,
-  'EthnicGroup_group A': false,
-  'EthnicGroup_group B': false,
-  'EthnicGroup_group C': false,
-  'EthnicGroup_group D': false,
-  'EthnicGroup_group E': false,
-  LunchType_standard: false,
-  TestPrep_completed: false,
-  TestPrep_none: false,
-  'ParentMaritalStatus_divorced': false,
-  'ParentMaritalStatus_married': false,
-  'ParentMaritalStatus_single': false,
-  'ParentMaritalStatus_widowed': false,
-  TransportMeans_private: false,
-  TransportMeans_school_bus: false,
+    ParentEduc: '',
+    PracticeSport: false,
+    IsFirstChild: false,
+    NrSiblings: '',
+    WklyStudyHours: '',
+    Gender_male: false,
+    'EthnicGroup_group A': false,
+    'EthnicGroup_group B': false,
+    'EthnicGroup_group C': false,
+    'EthnicGroup_group D': false,
+    'EthnicGroup_group E': false,
+    LunchType_standard: false,
+    TestPrep_completed: false,
+    TestPrep_none: false,
+    'ParentMaritalStatus_divorced': false,
+    'ParentMaritalStatus_married': false,
+    'ParentMaritalStatus_single': false,
+    'ParentMaritalStatus_widowed': false,
+    TransportMeans_private: false,
+    TransportMeans_school_bus: false,
+    MathScore: '',
+    ReadingScore: '',
+    WritingScore: '',
+    LinguisticScore: ''
 });
+
+
+/** const formDatas = ref(
+{
+    "ParentEduc": 2,
+    "PracticeSport": true,
+    "IsFirstChild": true,
+    "NrSiblings": 4,
+    "WklyStudyHours": 1,
+
+    "Gender_male": false,
+    "EthnicGroup_group A": false,
+    "EthnicGroup_group B": true,
+    "EthnicGroup_group C": false,
+    "EthnicGroup_group D": false,
+    "EthnicGroup_group E": false,
+    "LunchType_standard": true,
+    "TestPrep_completed": false,
+    "TestPrep_none": true,
+    "ParentMaritalStatus_divorced": false,
+    "ParentMaritalStatus_married": false,
+    "ParentMaritalStatus_single": true,
+    "ParentMaritalStatus_widowed": false,
+    "TransportMeans_private": false,
+    "TransportMeans_school_bus": true,
+    "LinguisticScore": 70
+}
+);
+
+**/
+
 
 const selectedGender = ref(formData.value.Gender_male ? 'male' : 'female');
 const selectedEthnicGroup = ref('');
@@ -243,8 +319,9 @@ const startPrediction = async () => {
     } finally {
       isLoading.value = false; // Hide progress bar after the prediction is fetched
     }
-  }, 3000); // 2000 milliseconds = 2 seconds
+  }, 6000); // 2000 milliseconds = 2 seconds
 };
+
 
 </script>
 
@@ -347,4 +424,17 @@ width: 100%;
   background-color: #fff;
 }
 
+.image-container img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto; /* Center the image */
+}
+.result-container{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+
+}
 </style>

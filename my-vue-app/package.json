@@ -13,6 +13,7 @@
     "cors": "^2.8.5",
     "primeicons": "^6.0.1",
     "primevue": "^3.45.0",
+    "sass": "^1.70.0",
     "vue": "^3.2.13"
   },
   "devDependencies": {
