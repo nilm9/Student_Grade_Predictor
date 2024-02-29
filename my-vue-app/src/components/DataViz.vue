@@ -72,20 +72,12 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import SubjectsChart from "@/components/charts/SubjectsChart.vue";
-//import EthnicChart from "@/components/charts/EthnicChart.vue";
-
-//import GradePie from "@/components/charts/GradePie.vue";
-
 import TestPie from "@/components/charts/TestPie.vue";
 import RadarChart from "@/components/charts/RadarChart.vue";
-
-
 import ProgressSpinner from 'primevue/progressspinner';
 import DynamicBar from "@/components/charts/DynamicBar.vue";
 import StudyHours from "@/components/charts/StudyHours.vue";
 import ParentEducation from "@/components/charts/ParentEducation.vue";
-//import StudyGrades from "@/components/charts/StudyGrades.vue";
-//import MultiAxis from "@/components/charts/MultiAxis.vue";
 
 const isLoadingSubjectsChart = ref(true);
 const isLoadingEthnicChart = ref(true);
@@ -127,7 +119,6 @@ const fetchChartData = async () => {
     }
 };
 
-// Function to set chart data
 // Function to set chart data
 const setChartData = (apiData) => {
     const documentStyle = getComputedStyle(document.documentElement);
@@ -202,9 +193,7 @@ const setChartOptions = () => {
   flex-direction:column;
 
 }
-.chart {
 
-}
 
 .card-shadow{
   width:60vw;

@@ -54,14 +54,13 @@ const transformChartData = (data) => {
         }
     }
 
-    // Return the transformed chart data
     return {
         labels: newLabels,
         datasets: [
             {
                 label: 'Weekly Study Hours',
                 data: transformedData,
-                backgroundColor: ['#42A5F5', '#66BB6A', '#FFA726', '#FFC107'], // Example colors
+                backgroundColor: ['#42A5F5', '#66BB6A', '#FFA726', '#FFC107'],
                 fill: false,
                 tension: 0.4
             }

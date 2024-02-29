@@ -18,10 +18,9 @@ onMounted(async () => {
 const chartData = ref();
 const chartOptions = ref();
 
-// Function to fetch chart data from the API
 const fetchChartData = async () => {
     try {
-        const response = await fetch('http://127.0.0.1:5000/api/line-scores'); // Adjust the URL as needed
+        const response = await fetch('http://127.0.0.1:5000/api/line-scores');
       console.log(response)
         if (!response.ok) {
             throw new Error('Network response was not ok');
@@ -32,8 +31,6 @@ const fetchChartData = async () => {
     }
 };
 
-// Function to set chart data
-// Function to set chart data
 const setChartData = (apiData) => {
     const documentStyle = getComputedStyle(document.documentElement);
 

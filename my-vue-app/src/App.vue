@@ -32,12 +32,10 @@
     <div v-if="activeTab === 'Home'">
             <HomeLanding />
 
-      <!-- Add your Home component here -->
     </div>
     <div v-if="activeTab === 'Dashboard'">
       <DashboardCharts />
     </div>
-    <!-- Add other conditions for your new pages -->
     <div v-if="activeTab === 'PredictGrade'">
       <PredictGrade />
     </div>
@@ -61,9 +59,6 @@ import HomeLanding from './components/HomeLanding.vue';
 import DashboardCharts from "@/components/DashboardCharts.vue";
 
 
-//import TabMenu from 'primevue/tabmenu';
-
-
 const activeTab = ref('Home');
 
 const items = ref([
@@ -77,9 +72,7 @@ const items = ref([
         icon: 'pi pi-chart-bar',
         command: () => { activeTab.value = 'Dashboard'; }
     },
-    // Add other items here
-    // For Projects, you might need a more complex logic if it has submenus
-    {
+  {
         label: 'PredictGrade',
         icon: 'pi pi-pencil',
         command: () => { activeTab.value = 'PredictGrade'; }
@@ -98,7 +91,6 @@ const items = ref([
 
 <style>
 
-/* Application styles */
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -108,7 +100,6 @@ const items = ref([
 }
 
 
-/* Card styles */
 .card, .container{
   margin: 20px;
   padding: 20px;
@@ -116,8 +107,6 @@ const items = ref([
   box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.25);
 }
 
-
-/* Image styles */
 img {
   width: 7rem;
 }
@@ -131,7 +120,6 @@ img {
   object-fit: cover;
 }
 
-/* Search box and user icon container */
 .search-user {
   display: flex;
   flex-direction: row;
@@ -141,7 +129,6 @@ img {
   margin-right:2rem;
 }
 
-/* Style for menu item content span */
 .p-menuitem-content span {
   margin: 0rem .3rem 0rem  0rem !important;
 }

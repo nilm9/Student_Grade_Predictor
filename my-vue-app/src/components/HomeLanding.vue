@@ -5,7 +5,6 @@
       <h2 class="subtitle" >GradeGenius.ai</h2>
 
           <h1 class="title">Your Pathway to Academic Insight</h1>
-      <!-- Application Header <img src="../../public/header.png" alt="header book neon" style="width:20rem;"> -->
       <div class="hero-header">
                   <Button label="Get Started"  />
           <Button label="Sing in"  />

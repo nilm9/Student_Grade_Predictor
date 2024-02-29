@@ -22,7 +22,7 @@ const featureMapping = {
 };
 const features = ref(Object.keys(featureMapping));
 // Set a default value for selectedFeature
-const selectedFeature = ref('Lunch Type Standard'); // example default feature
+const selectedFeature = ref('Lunch Type Standard');
 
 onMounted(async () => {
     chartOptions.value = setChartOptions();
@@ -124,9 +124,7 @@ const setChartOptions = () => {
 </script>
 
 <style>
-/* Add your component-specific styles here */
 .chart {
-    /* Example styling for the chart */
     height: 400px;
     width: 100%;
 }

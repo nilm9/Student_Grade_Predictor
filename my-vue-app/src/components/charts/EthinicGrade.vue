@@ -4,7 +4,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import Chart from 'primevue/chart'; // Make sure this import path is correct for your project
+import Chart from 'primevue/chart';
 
 const chartData = ref({});
 const chartOptions = ref({});
@@ -18,7 +18,7 @@ onMounted(async () => {
 // Function to fetch chart data from the API
 const fetchEthnicGroupData = async () => {
     try {
-        const response = await fetch('http://127.0.0.1:5000/api/stacked-scores-by-ethnicity'); // Adjust the URL as needed
+        const response = await fetch('http://127.0.0.1:5000/api/stacked-scores-by-ethnicity');
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
@@ -31,9 +31,8 @@ const fetchEthnicGroupData = async () => {
 // Function to set chart data based on API response
 const setChartData = (apiData) => {
     // Labels should correspond to each score type
-    const labels = ['Scores']; // Placeholder label, replace with actual labels if available
+    const labels = ['Scores'];
 
-    // Background colors for each dataset, if not already specified in apiData
     const backgroundColors = ['#42A5F5', '#66BB6A', '#FFA726'];
 
     // Ensure the data is structured correctly for Chart.js
@@ -45,7 +44,7 @@ const setChartData = (apiData) => {
     });
 
     return {
-        labels, // You can have more labels if your data has multiple categories
+        labels,
         datasets
     };
 };
@@ -88,5 +87,4 @@ return {
 };
 </script >
 <style>
-/* Add your styles here */
 </style>

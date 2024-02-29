@@ -134,25 +134,28 @@
       <h2>Your Results</h2>
       <div class="prediction-container">
         <ProgressBar mode="indeterminate" style="height: 6px; margin-top:2rem;" v-if="isLoading"></ProgressBar>
+  <template v-if="!isLoading">
 
         <!-- Display prediction result if available -->
         <div class="result" v-if="predictionResult">
-          Prediction: {{ predictionResult }}
+          Grade Prediction: {{ predictionResult }}
         </div>
 
         <!-- Placeholder when there is no prediction and not loading -->
         <div class="placeholder" v-if="!predictionResult && !isLoading">
           <p>Enter your data to get your final grade.</p>
         </div>
-   <div class="result-container">
+   <div v-else class="result-container">
 
         <div class="image-container">
           <FeatureImportance style=" width:45vw;"/>
         </div>
         <form class="result-form">
-          <CounterFactual  />
+          <CounterFactual :current-features="formData" />
         </form>
         </div>
+      </template>
+
       </div>
     </div>
         </form>
@@ -174,8 +177,7 @@ import CounterFactual from "@/components/CounterFactual.vue";
 
 
 const predictionResult = ref(null);
-//const progressValue = ref(0);
-//const showProgressBar = ref(false);
+
 
 const isLoading = ref(false);
 
@@ -222,35 +224,6 @@ const formData = ref({
 });
 
 
-/** const formDatas = ref(
-{
-    "ParentEduc": 2,
-    "PracticeSport": true,
-    "IsFirstChild": true,
-    "NrSiblings": 4,
-    "WklyStudyHours": 1,
-
-    "Gender_male": false,
-    "EthnicGroup_group A": false,
-    "EthnicGroup_group B": true,
-    "EthnicGroup_group C": false,
-    "EthnicGroup_group D": false,
-    "EthnicGroup_group E": false,
-    "LunchType_standard": true,
-    "TestPrep_completed": false,
-    "TestPrep_none": true,
-    "ParentMaritalStatus_divorced": false,
-    "ParentMaritalStatus_married": false,
-    "ParentMaritalStatus_single": true,
-    "ParentMaritalStatus_widowed": false,
-    "TransportMeans_private": false,
-    "TransportMeans_school_bus": true,
-    "LinguisticScore": 70
-}
-);
-
-**/
-
 
 const selectedGender = ref(formData.value.Gender_male ? 'male' : 'female');
 const selectedEthnicGroup = ref('');
@@ -293,6 +266,8 @@ const submitForm = async () => {
       body: JSON.stringify(formData.value),
     });
     const data = await response.json();
+    console.log('debugging data')
+    console.log(data)
     predictionResult.value = data.prediction;
   } catch (error) {
     console.error('Error:', error);
@@ -300,26 +275,23 @@ const submitForm = async () => {
 };
 
 const startPrediction = async () => {
-  isLoading.value = true;
+  isLoading.value = true; // Start loading immediately
 
-  // Delay the API call for 2 seconds
-  setTimeout(async () => {
-    try {
-      const response = await fetch('http://127.0.0.1:5000/api/predict', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData.value),
-      });
-      const data = await response.json();
-      predictionResult.value = data.prediction;
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      isLoading.value = false; // Hide progress bar after the prediction is fetched
-    }
-  }, 6000); // 2000 milliseconds = 2 seconds
+  try {
+    const response = await fetch('http://127.0.0.1:5000/api/predict', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData.value),
+    });
+    const data = await response.json();
+    predictionResult.value = data.prediction;
+  } catch (error) {
+    console.error('Error:', error);
+  } finally {
+    isLoading.value = false; // End loading once the prediction is fetched
+  }
 };
 
 
@@ -428,7 +400,7 @@ width: 100%;
     max-width: 100%;
     height: auto;
     display: block;
-    margin: 0 auto; /* Center the image */
+    margin: 0 auto;
 }
 .result-container{
   display:flex;

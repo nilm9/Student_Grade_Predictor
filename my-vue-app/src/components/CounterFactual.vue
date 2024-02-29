@@ -20,12 +20,18 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, defineProps } from 'vue';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 
+
+const props = defineProps({
+  currentFeatures: Object
+});
+
+
 // Initialize originalWklyStudyHours with the original value of weekly study hours
-const originalWklyStudyHours = ref(0); // Adjust this initial value as needed
+const originalWklyStudyHours = ref(0);
 
 const desiredMark = ref('');
 const analysisResult = ref(null);
@@ -40,29 +46,8 @@ const performAnalysis = async () => {
       },
        // body: JSON.stringify({ current_features: formData.value }),
               body: JSON.stringify({
-        current_features: {
-          "ParentEduc": 2,
-          "PracticeSport": 1,
-          "IsFirstChild": 1,
-          "NrSiblings": 4,
-          "WklyStudyHours": 1,
-          "Gender_male": 0,
-          "EthnicGroup_group A": 0,
-          "EthnicGroup_group B": 1,
-          "EthnicGroup_group C": 0,
-          "EthnicGroup_group D": 0,
-          "EthnicGroup_group E": 0,
-          "LunchType_standard": 1,
-          "TestPrep_completed": 0,
-          "TestPrep_none": 1,
-          "ParentMaritalStatus_divorced": 0,
-          "ParentMaritalStatus_married": 0,
-          "ParentMaritalStatus_single": 1,
-          "ParentMaritalStatus_widowed": 0,
-          "TransportMeans_private": 0,
-          "TransportMeans_school_bus": 1
-        },
-        desired_prediction: 90
+        current_features: props.currentFeatures, // Use the passed props here
+        desired_prediction: parseInt(desiredMark.value, 10)
       })
     });
     if (response.ok) {
@@ -70,7 +55,7 @@ const performAnalysis = async () => {
               console.log("hello")
 
       console.log(data)
-      // Assuming 'WklyStudyHours' is at the 4th index (adjust this index as per your actual data)
+      // Assuming 'WklyStudyHours' is at the 4th index
       const newWklyStudyHours = data.counterfactual[4];
       const increaseInHours = newWklyStudyHours - originalWklyStudyHours.value;
 

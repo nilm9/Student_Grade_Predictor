@@ -42,7 +42,6 @@ const setChartData = (apiData) => {
                 pointBackgroundColor: documentStyle.getPropertyValue('--blue-500'),
                 tension: 0.4
             },
-            // Add other dataset(s) for additional axes here if needed
         ]
     };
 };
@@ -84,15 +83,13 @@ const setChartOptions = () => {
                     color: surfaceBorder
                 }
             },
-            // Add configuration for the second y-axis (y1) if you have a second dataset
-            // y1: { ... }
+
         }
     };
 }
 </script>
 
 <style>
-/* Add your component-specific styles here */
 .card {
     padding: 20px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);

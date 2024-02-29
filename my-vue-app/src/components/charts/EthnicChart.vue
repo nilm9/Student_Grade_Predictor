@@ -4,7 +4,7 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import Chart from 'primevue/chart'; // Replace with your actual Chart component import
+import Chart from 'primevue/chart';
 
 const chartData = ref();
 const chartOptions = ref();
@@ -18,7 +18,7 @@ onMounted(async () => {
 // Function to fetch chart data from the API
 const fetchEthnicGroupData = async () => {
     try {
-        const response = await fetch('http://127.0.0.1:5000/api/ethnic-group-data'); // Adjust the URL as needed
+        const response = await fetch('http://127.0.0.1:5000/api/ethnic-group-data');
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }

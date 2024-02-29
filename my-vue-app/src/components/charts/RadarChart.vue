@@ -53,6 +53,5 @@ const setChartOptions = () => {
 </script>
 
 <style>
-/* Add your component-specific styles here */
 
 </style>
