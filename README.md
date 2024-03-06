@@ -207,5 +207,13 @@ Deploying the Student Grade Predictor on AWS involves several steps to ensure sc
 8. **Configure DNS with Route 53**: Use AWS Route 53 to direct users to the application by linking the domain name to the load balancer's DNS name.
 
 
+## Group Members
+Elham Najafi, 
+Elaheh Najafi, 
+Lucie Stecker, 
+Lisa Mühl, 
+Eric Souobu Ndjoughem,
+Nil Monfort
+
 
 We hope this tool proves to be a valuable resource for students and educators alike, providing insights into academic performance and aiding in educational planning.
